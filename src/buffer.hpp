@@ -15,4 +15,10 @@ static T* alloc(Buffer<T, N>* buffer) {
     return &buffer->items[buffer->len++];
 }
 
+template <typename T, usize N>
+static T get(const Buffer<T, N>* buffer, usize i) {
+    EXIT_IF(buffer->len <= i);
+    return buffer->items[i];
+}
+
 #endif

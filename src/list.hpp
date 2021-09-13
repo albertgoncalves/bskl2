@@ -16,8 +16,8 @@ struct List {
 };
 
 template <typename T, usize N>
-static void append(Buffer<ListNode<T>, N>* buffer, List<T>* list, T value) {
-    ListNode<T>* node = alloc(buffer);
+static void append(Buffer<ListNode<T>, N>* nodes, List<T>* list, T value) {
+    ListNode<T>* node = alloc(nodes);
     node->value = value;
     node->next = null;
     if (!list->first) {

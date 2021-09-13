@@ -71,8 +71,8 @@ static u32 parse_u32(String string, usize* i) {
 }
 
 template <usize N>
-static void set_tokens(String source, Buffer<Token, N>* buffer) {
-    buffer->len = 0;
+static void set_tokens(String source, Buffer<Token, N>* tokens) {
+    tokens->len = 0;
     for (usize i = 0; i < source.len;) {
         switch (source.chars[i]) {
         case '#': {
@@ -92,37 +92,37 @@ static void set_tokens(String source, Buffer<Token, N>* buffer) {
             break;
         }
         case '(': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_LPAREN;
             token->offset = i++;
             break;
         }
         case ')': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_RPAREN;
             token->offset = i++;
             break;
         }
         case '{': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_LBRACE;
             token->offset = i++;
             break;
         }
         case '}': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_RBRACE;
             token->offset = i++;
             break;
         }
         case ';': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_SCOLON;
             token->offset = i++;
             break;
         }
         case '=': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_ASSIGN;
             token->offset = i++;
             if ((i < source.len) && (source.chars[i] == '=')) {
@@ -132,7 +132,7 @@ static void set_tokens(String source, Buffer<Token, N>* buffer) {
             break;
         }
         case '!': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_NE;
             token->offset = i++;
             EXIT_IF(source.len <= i);
@@ -141,31 +141,31 @@ static void set_tokens(String source, Buffer<Token, N>* buffer) {
             break;
         }
         case '+': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_ADD;
             token->offset = i++;
             break;
         }
         case '-': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_SUB;
             token->offset = i++;
             break;
         }
         case '*': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_MUL;
             token->offset = i++;
             break;
         }
         case '/': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_DIV;
             token->offset = i++;
             break;
         }
         case '<': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_LT;
             token->offset = i++;
             if ((i < source.len) && (source.chars[i] == '=')) {
@@ -175,7 +175,7 @@ static void set_tokens(String source, Buffer<Token, N>* buffer) {
             break;
         }
         case '>': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_GT;
             token->offset = i++;
             if ((i < source.len) && (source.chars[i] == '=')) {
@@ -185,20 +185,20 @@ static void set_tokens(String source, Buffer<Token, N>* buffer) {
             break;
         }
         case '&': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_AND;
             token->offset = i++;
             break;
         }
         case '|': {
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->tag = TOKEN_OR;
             token->offset = i++;
             break;
         }
         default: {
             EXIT_IF(!(IS_ALPHA_OR_DIGIT_OR_PUNCT(source.chars[i])));
-            Token* token = alloc(buffer);
+            Token* token = alloc(tokens);
             token->offset = i;
             if (IS_DIGIT(source.chars[i])) {
                 token->body.as_u32 = parse_u32(source, &i);

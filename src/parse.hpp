@@ -809,8 +809,7 @@ static void parse_func(const Buffer<Token, T>*     tokens,
 template <usize T, usize S, usize B, usize U, usize E, usize F>
 static void parse_program(const Buffer<Token, T>*     tokens,
                           ParseMemory<S, B, U, E, F>* memory) {
-    memory->funcs.len = 0;
-    memory->exprs.len = 0;
+    memset(memory, 0, sizeof(ParseMemory<S, B, U, E, F>));
     usize i = 0;
     while (i < tokens->len) {
         parse_func(tokens, memory, &i);

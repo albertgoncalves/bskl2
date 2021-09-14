@@ -7,8 +7,6 @@
 
 enum TokenTag {
     TOKEN_UNDEF = 0,
-    TOKEN_NEGATE,
-    TOKEN_IF,
 
     TOKEN_LET,
     TOKEN_LETREC,
@@ -225,10 +223,6 @@ static void set_tokens(String source, Buffer<Token, N>* tokens) {
             String var = {&source.chars[i], j - i};
             if (var == GET_STRING("undef")) {
                 token->tag = TOKEN_UNDEF;
-            } else if (var == GET_STRING("negate")) {
-                token->tag = TOKEN_NEGATE;
-            } else if (var == GET_STRING("if")) {
-                token->tag = TOKEN_IF;
             } else if (var == GET_STRING("let")) {
                 token->tag = TOKEN_LET;
             } else if (var == GET_STRING("letrec")) {
@@ -267,7 +261,8 @@ static void test_set_tokens(Buffer<Token, N>* tokens) {
     {
         set_tokens(GET_STRING("\n  negate"), tokens);
         EXIT_IF(tokens->len != 1);
-        EXIT_IF(tokens->items[0].tag != TOKEN_NEGATE);
+        EXIT_IF(tokens->items[0].tag != TOKEN_VAR);
+        EXIT_IF(tokens->items[0].body.as_string != GET_STRING("negate"));
         EXIT_IF(tokens->items[0].offset != 3);
         fprintf(stderr, ".");
     }
@@ -314,7 +309,8 @@ static void test_set_tokens(Buffer<Token, N>* tokens) {
     {
         set_tokens(GET_STRING("if (a == b) _xy _uv"), tokens);
         EXIT_IF(tokens->len != 8);
-        EXIT_IF(tokens->items[0].tag != TOKEN_IF);
+        EXIT_IF(tokens->items[0].tag != TOKEN_VAR);
+        EXIT_IF(tokens->items[0].body.as_string != GET_STRING("if"));
         EXIT_IF(tokens->items[0].offset != 0);
         EXIT_IF(tokens->items[1].tag != TOKEN_LPAREN);
         EXIT_IF(tokens->items[1].offset != 3);

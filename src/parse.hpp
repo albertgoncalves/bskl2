@@ -420,7 +420,9 @@ static void test_set_tokens(Buffer<Token, N>* tokens) {
 }
 
 template <usize T, usize S, usize B, usize U, usize E, usize F>
-Expr* parse_expr(const Buffer<Token, T>*, ParseMemory<S, B, U, E, F>*, usize*);
+const Expr* parse_expr(const Buffer<Token, T>*,
+                       ParseMemory<S, B, U, E, F>*,
+                       usize*);
 
 template <usize T, usize S, usize B, usize U, usize E, usize F>
 static ExprBinding parse_binding(const Buffer<Token, T>*     tokens,
@@ -448,9 +450,9 @@ template <usize    T,
           usize    F,
           TokenTag X,
           ExprTag  Y>
-static Expr* parse_let(const Buffer<Token, T>*     tokens,
-                       ParseMemory<S, B, U, E, F>* memory,
-                       usize*                      i) {
+static const Expr* parse_let(const Buffer<Token, T>*     tokens,
+                             ParseMemory<S, B, U, E, F>* memory,
+                             usize*                      i) {
     {
         const Token token = get(tokens, (*i)++);
         EXIT_IF(token.tag != X);
@@ -511,9 +513,9 @@ static ExprBranch parse_branch(const Buffer<Token, T>*     tokens,
 }
 
 template <usize T, usize S, usize B, usize U, usize E, usize F>
-static Expr* parse_unpack(const Buffer<Token, T>*     tokens,
-                          ParseMemory<S, B, U, E, F>* memory,
-                          usize*                      i) {
+static const Expr* parse_unpack(const Buffer<Token, T>*     tokens,
+                                ParseMemory<S, B, U, E, F>* memory,
+                                usize*                      i) {
     Expr* expr = alloc(&memory->exprs);
     expr->tag = EXPR_UNPACK;
     {
@@ -540,7 +542,9 @@ static Expr* parse_unpack(const Buffer<Token, T>*     tokens,
 }
 
 template <usize E>
-static Expr* get_app(Buffer<Expr, E>* exprs, Expr* l, Expr* r) {
+static const Expr* get_app(Buffer<Expr, E>* exprs,
+                           const Expr*      l,
+                           const Expr*      r) {
     Expr* app = alloc(exprs);
     app->tag = EXPR_APP;
     app->body.as_app[0] = l;
@@ -549,9 +553,9 @@ static Expr* get_app(Buffer<Expr, E>* exprs, Expr* l, Expr* r) {
 }
 
 template <usize T, usize S, usize B, usize U, usize E, usize F>
-static Expr* parse_atomic(const Buffer<Token, T>*     tokens,
-                          ParseMemory<S, B, U, E, F>* memory,
-                          usize*                      i) {
+static const Expr* parse_atomic(const Buffer<Token, T>*     tokens,
+                                ParseMemory<S, B, U, E, F>* memory,
+                                usize*                      i) {
     const Token token = get(tokens, *i);
     if (token.tag == TOKEN_UNDEF) {
         ++(*i);
@@ -577,7 +581,7 @@ static Expr* parse_atomic(const Buffer<Token, T>*     tokens,
         return expr;
     } else if (token.tag == TOKEN_LPAREN) {
         ++(*i);
-        Expr* expr = parse_expr(tokens, memory, i);
+        const Expr* expr = parse_expr(tokens, memory, i);
         {
             const Token token0 = get(tokens, (*i)++);
             EXIT_IF(token0.tag != TOKEN_RPAREN);
@@ -600,13 +604,13 @@ static Expr* parse_atomic(const Buffer<Token, T>*     tokens,
 }
 
 template <usize T, usize S, usize B, usize U, usize E, usize F>
-static Expr* parse_expr6(const Buffer<Token, T>*     tokens,
-                         ParseMemory<S, B, U, E, F>* memory,
-                         usize*                      i) {
-    Expr* l = parse_atomic(tokens, memory, i);
+static const Expr* parse_expr6(const Buffer<Token, T>*     tokens,
+                               ParseMemory<S, B, U, E, F>* memory,
+                               usize*                      i) {
+    const Expr* l = parse_atomic(tokens, memory, i);
     EXIT_IF(!l);
     for (;;) {
-        Expr* r = parse_atomic(tokens, memory, i);
+        const Expr* r = parse_atomic(tokens, memory, i);
         if (!r) {
             return l;
         }
@@ -615,23 +619,23 @@ static Expr* parse_expr6(const Buffer<Token, T>*     tokens,
 }
 
 template <usize T, usize S, usize B, usize U, usize E, usize F>
-static Expr* parse_expr5(const Buffer<Token, T>*     tokens,
-                         ParseMemory<S, B, U, E, F>* memory,
-                         usize*                      i) {
-    Expr* l = parse_expr6(tokens, memory, i);
+static const Expr* parse_expr5(const Buffer<Token, T>*     tokens,
+                               ParseMemory<S, B, U, E, F>* memory,
+                               usize*                      i) {
+    const Expr* l = parse_expr6(tokens, memory, i);
     {
         const Token token = get(tokens, *i);
         if (token.tag == TOKEN_MUL) {
             ++(*i);
-            Expr* r = parse_expr5(tokens, memory, i);
-            Expr* op = alloc(&memory->exprs);
+            const Expr* r = parse_expr5(tokens, memory, i);
+            Expr*       op = alloc(&memory->exprs);
             op->tag = EXPR_BINOP;
             op->body.as_binop = BINOP_MUL;
             return get_app(&memory->exprs, get_app(&memory->exprs, op, l), r);
         } else if (token.tag == TOKEN_DIV) {
             ++(*i);
-            Expr* r = parse_expr6(tokens, memory, i);
-            Expr* op = alloc(&memory->exprs);
+            const Expr* r = parse_expr6(tokens, memory, i);
+            Expr*       op = alloc(&memory->exprs);
             op->tag = EXPR_BINOP;
             op->body.as_binop = BINOP_DIV;
             return get_app(&memory->exprs, get_app(&memory->exprs, op, l), r);
@@ -641,23 +645,23 @@ static Expr* parse_expr5(const Buffer<Token, T>*     tokens,
 }
 
 template <usize T, usize S, usize B, usize U, usize E, usize F>
-static Expr* parse_expr4(const Buffer<Token, T>*     tokens,
-                         ParseMemory<S, B, U, E, F>* memory,
-                         usize*                      i) {
-    Expr* l = parse_expr5(tokens, memory, i);
+static const Expr* parse_expr4(const Buffer<Token, T>*     tokens,
+                               ParseMemory<S, B, U, E, F>* memory,
+                               usize*                      i) {
+    const Expr* l = parse_expr5(tokens, memory, i);
     {
         const Token token = get(tokens, *i);
         if (token.tag == TOKEN_ADD) {
             ++(*i);
-            Expr* r = parse_expr4(tokens, memory, i);
-            Expr* op = alloc(&memory->exprs);
+            const Expr* r = parse_expr4(tokens, memory, i);
+            Expr*       op = alloc(&memory->exprs);
             op->tag = EXPR_BINOP;
             op->body.as_binop = BINOP_ADD;
             return get_app(&memory->exprs, get_app(&memory->exprs, op, l), r);
         } else if (token.tag == TOKEN_SUB) {
             ++(*i);
-            Expr* r = parse_expr5(tokens, memory, i);
-            Expr* op = alloc(&memory->exprs);
+            const Expr* r = parse_expr5(tokens, memory, i);
+            Expr*       op = alloc(&memory->exprs);
             op->tag = EXPR_BINOP;
             op->body.as_binop = BINOP_SUB;
             return get_app(&memory->exprs, get_app(&memory->exprs, op, l), r);
@@ -667,51 +671,51 @@ static Expr* parse_expr4(const Buffer<Token, T>*     tokens,
 }
 
 template <usize T, usize S, usize B, usize U, usize E, usize F>
-static Expr* parse_expr3(const Buffer<Token, T>*     tokens,
-                         ParseMemory<S, B, U, E, F>* memory,
-                         usize*                      i) {
-    Expr* l = parse_expr4(tokens, memory, i);
+static const Expr* parse_expr3(const Buffer<Token, T>*     tokens,
+                               ParseMemory<S, B, U, E, F>* memory,
+                               usize*                      i) {
+    const Expr* l = parse_expr4(tokens, memory, i);
     {
         const Token token = get(tokens, *i);
         if (token.tag == TOKEN_LT) {
             ++(*i);
-            Expr* r = parse_expr4(tokens, memory, i);
-            Expr* op = alloc(&memory->exprs);
+            const Expr* r = parse_expr4(tokens, memory, i);
+            Expr*       op = alloc(&memory->exprs);
             op->tag = EXPR_BINOP;
             op->body.as_binop = BINOP_LT;
             return get_app(&memory->exprs, get_app(&memory->exprs, op, l), r);
         } else if (token.tag == TOKEN_LE) {
             ++(*i);
-            Expr* r = parse_expr4(tokens, memory, i);
-            Expr* op = alloc(&memory->exprs);
+            const Expr* r = parse_expr4(tokens, memory, i);
+            Expr*       op = alloc(&memory->exprs);
             op->tag = EXPR_BINOP;
             op->body.as_binop = BINOP_LE;
             return get_app(&memory->exprs, get_app(&memory->exprs, op, l), r);
         } else if (token.tag == TOKEN_GT) {
             ++(*i);
-            Expr* r = parse_expr4(tokens, memory, i);
-            Expr* op = alloc(&memory->exprs);
+            const Expr* r = parse_expr4(tokens, memory, i);
+            Expr*       op = alloc(&memory->exprs);
             op->tag = EXPR_BINOP;
             op->body.as_binop = BINOP_GT;
             return get_app(&memory->exprs, get_app(&memory->exprs, op, l), r);
         } else if (token.tag == TOKEN_GE) {
             ++(*i);
-            Expr* r = parse_expr4(tokens, memory, i);
-            Expr* op = alloc(&memory->exprs);
+            const Expr* r = parse_expr4(tokens, memory, i);
+            Expr*       op = alloc(&memory->exprs);
             op->tag = EXPR_BINOP;
             op->body.as_binop = BINOP_GE;
             return get_app(&memory->exprs, get_app(&memory->exprs, op, l), r);
         } else if (token.tag == TOKEN_EQ) {
             ++(*i);
-            Expr* r = parse_expr4(tokens, memory, i);
-            Expr* op = alloc(&memory->exprs);
+            const Expr* r = parse_expr4(tokens, memory, i);
+            Expr*       op = alloc(&memory->exprs);
             op->tag = EXPR_BINOP;
             op->body.as_binop = BINOP_EQ;
             return get_app(&memory->exprs, get_app(&memory->exprs, op, l), r);
         } else if (token.tag == TOKEN_NE) {
             ++(*i);
-            Expr* r = parse_expr4(tokens, memory, i);
-            Expr* op = alloc(&memory->exprs);
+            const Expr* r = parse_expr4(tokens, memory, i);
+            Expr*       op = alloc(&memory->exprs);
             op->tag = EXPR_BINOP;
             op->body.as_binop = BINOP_NE;
             return get_app(&memory->exprs, get_app(&memory->exprs, op, l), r);
@@ -721,16 +725,16 @@ static Expr* parse_expr3(const Buffer<Token, T>*     tokens,
 }
 
 template <usize T, usize S, usize B, usize U, usize E, usize F>
-static Expr* parse_expr2(const Buffer<Token, T>*     tokens,
-                         ParseMemory<S, B, U, E, F>* memory,
-                         usize*                      i) {
-    Expr* l = parse_expr3(tokens, memory, i);
+static const Expr* parse_expr2(const Buffer<Token, T>*     tokens,
+                               ParseMemory<S, B, U, E, F>* memory,
+                               usize*                      i) {
+    const Expr* l = parse_expr3(tokens, memory, i);
     {
         const Token token = get(tokens, *i);
         if (token.tag == TOKEN_AND) {
             ++(*i);
-            Expr* r = parse_expr2(tokens, memory, i);
-            Expr* op = alloc(&memory->exprs);
+            const Expr* r = parse_expr2(tokens, memory, i);
+            Expr*       op = alloc(&memory->exprs);
             op->tag = EXPR_BINOP;
             op->body.as_binop = BINOP_AND;
             return get_app(&memory->exprs, get_app(&memory->exprs, op, l), r);
@@ -740,16 +744,16 @@ static Expr* parse_expr2(const Buffer<Token, T>*     tokens,
 }
 
 template <usize T, usize S, usize B, usize U, usize E, usize F>
-static Expr* parse_expr1(const Buffer<Token, T>*     tokens,
-                         ParseMemory<S, B, U, E, F>* memory,
-                         usize*                      i) {
-    Expr* l = parse_expr2(tokens, memory, i);
+static const Expr* parse_expr1(const Buffer<Token, T>*     tokens,
+                               ParseMemory<S, B, U, E, F>* memory,
+                               usize*                      i) {
+    const Expr* l = parse_expr2(tokens, memory, i);
     {
         const Token token = get(tokens, *i);
         if (token.tag == TOKEN_OR) {
             ++(*i);
-            Expr* r = parse_expr1(tokens, memory, i);
-            Expr* op = alloc(&memory->exprs);
+            const Expr* r = parse_expr1(tokens, memory, i);
+            Expr*       op = alloc(&memory->exprs);
             op->tag = EXPR_BINOP;
             op->body.as_binop = BINOP_OR;
             return get_app(&memory->exprs, get_app(&memory->exprs, op, l), r);
@@ -759,9 +763,9 @@ static Expr* parse_expr1(const Buffer<Token, T>*     tokens,
 }
 
 template <usize T, usize S, usize B, usize U, usize E, usize F>
-Expr* parse_expr(const Buffer<Token, T>*     tokens,
-                 ParseMemory<S, B, U, E, F>* memory,
-                 usize*                      i) {
+const Expr* parse_expr(const Buffer<Token, T>*     tokens,
+                       ParseMemory<S, B, U, E, F>* memory,
+                       usize*                      i) {
     const Token token = get(tokens, *i);
     if (token.tag == TOKEN_LET) {
         ++(*i);
@@ -861,43 +865,43 @@ static void test_parse_program(Buffer<Token, T>*           tokens,
                 EXIT_IF(arg->next);
             }
             {
-                Expr* expr = memory->funcs.items[1].expr;
+                const Expr* expr = memory->funcs.items[1].expr;
                 EXIT_IF(expr->tag != EXPR_APP);
                 EXIT_IF(expr->body.as_app[0]->tag != EXPR_APP);
                 {
-                    Expr* l0 = expr->body.as_app[0];
+                    const Expr* l0 = expr->body.as_app[0];
                     EXIT_IF(l0->tag != EXPR_APP);
                     {
-                        Expr* l1 = l0->body.as_app[0];
+                        const Expr* l1 = l0->body.as_app[0];
                         EXIT_IF(l1->tag != EXPR_BINOP);
                         EXIT_IF(l1->body.as_binop != BINOP_ADD);
                     }
                     {
-                        Expr* r1 = l0->body.as_app[1];
+                        const Expr* r1 = l0->body.as_app[1];
                         EXIT_IF(r1->tag != EXPR_APP);
                         {
-                            Expr* l2 = r1->body.as_app[0];
+                            const Expr* l2 = r1->body.as_app[0];
                             EXIT_IF(l2->tag != EXPR_APP);
                             {
-                                Expr* l3 = l2->body.as_app[0];
+                                const Expr* l3 = l2->body.as_app[0];
                                 EXIT_IF(l3->tag != EXPR_BINOP);
                                 EXIT_IF(l3->body.as_binop != BINOP_SUB);
                             }
                             {
-                                Expr* r3 = l2->body.as_app[1];
+                                const Expr* r3 = l2->body.as_app[1];
                                 EXIT_IF(r3->tag != EXPR_VAR);
                                 EXIT_IF(r3->body.as_var != GET_STRING("a"));
                             }
                         }
                         {
-                            Expr* r2 = r1->body.as_app[1];
+                            const Expr* r2 = r1->body.as_app[1];
                             EXIT_IF(r2->tag != EXPR_VAR);
                             EXIT_IF(r2->body.as_var != GET_STRING("b"));
                         }
                     }
                 }
                 {
-                    Expr* r0 = expr->body.as_app[1];
+                    const Expr* r0 = expr->body.as_app[1];
                     EXIT_IF(r0->tag != EXPR_VAR);
                     EXIT_IF(r0->body.as_var != GET_STRING("c"));
                 }
@@ -908,7 +912,7 @@ static void test_parse_program(Buffer<Token, T>*           tokens,
             EXIT_IF(memory->funcs.items[2].name.as_var != GET_STRING("h"));
             EXIT_IF(memory->funcs.items[2].args.first);
             {
-                Expr* expr = memory->funcs.items[2].expr;
+                const Expr* expr = memory->funcs.items[2].expr;
                 EXIT_IF(expr->tag != EXPR_PACK);
                 EXIT_IF(expr->body.as_pack[0] != 1);
                 EXIT_IF(expr->body.as_pack[1] != 0);

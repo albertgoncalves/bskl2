@@ -39,34 +39,34 @@ enum ExprTag {
 };
 
 struct ExprBinding {
-    String name;
-    Expr*  expr;
+    String      name;
+    const Expr* expr;
 };
 
 struct ExprLet {
     List<ExprBinding> bindings;
-    Expr*             expr;
+    const Expr*       expr;
 };
 
 struct ExprBranch {
     List<String> args;
-    Expr*        expr;
+    const Expr*  expr;
     u8           tag;
 };
 
 struct ExprUnpack {
-    Expr*            expr;
+    const Expr*      expr;
     List<ExprBranch> branches;
 };
 
 union ExprBody {
-    String     as_var;
-    u32        as_u32;
-    u8         as_pack[2];
-    Expr*      as_app[2];
-    ExprLet    as_let;
-    ExprUnpack as_unpack;
-    BinOp      as_binop;
+    String      as_var;
+    u32         as_u32;
+    u8          as_pack[2];
+    const Expr* as_app[2];
+    ExprLet     as_let;
+    ExprUnpack  as_unpack;
+    BinOp       as_binop;
 };
 
 struct Expr {
@@ -86,7 +86,7 @@ union FuncName {
 
 struct Func {
     List<String> args;
-    Expr*        expr;
+    const Expr*  expr;
     FuncName     name;
     FuncTag      tag;
 };

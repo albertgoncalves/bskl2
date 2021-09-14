@@ -38,7 +38,7 @@ static void concat(List<T>* a, List<T>* b) {
 template <typename T>
 static void println(File* stream, List<T>* list) {
     fprintf(stream, "[");
-    ListNode<T>* node = list->first;
+    const ListNode<T>* node = list->first;
     if (node) {
         print(stream, node->value);
         for (;;) {

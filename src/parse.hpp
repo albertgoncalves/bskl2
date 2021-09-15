@@ -424,57 +424,41 @@ const Expr* parse_expr(const Buffer<Token, T>*,
                        ParseMemory<S, B, U, E, F>*,
                        usize*);
 
-template <usize T, usize S, usize B, usize U, usize E, usize F>
-static ExprBinding parse_binding(const Buffer<Token, T>*     tokens,
-                                 ParseMemory<S, B, U, E, F>* memory,
-                                 usize*                      i) {
-    ExprBinding binding;
-    {
-        const Token token = get(tokens, (*i)++);
-        EXIT_IF(token.tag != TOKEN_VAR);
-        binding.name = token.body.as_string;
-    }
-    {
-        const Token token = get(tokens, (*i)++);
-        EXIT_IF(token.tag != TOKEN_ASSIGN);
-    }
-    binding.expr = parse_expr(tokens, memory, i);
-    return binding;
-}
-
-template <usize    T,
-          usize    S,
-          usize    B,
-          usize    U,
-          usize    E,
-          usize    F,
-          TokenTag X,
-          ExprTag  Y>
+template <usize T, usize S, usize B, usize U, usize E, usize F, ExprTag X>
 static const Expr* parse_let(const Buffer<Token, T>*     tokens,
                              ParseMemory<S, B, U, E, F>* memory,
                              usize*                      i) {
     {
         const Token token = get(tokens, (*i)++);
-        EXIT_IF(token.tag != X);
-    }
-    {
-        const Token token = get(tokens, (*i)++);
         EXIT_IF(token.tag != TOKEN_LBRACE);
     }
     Expr* expr = alloc(&memory->exprs);
-    expr->tag = Y;
+    expr->tag = X;
     for (;;) {
-        append(&memory->bindings,
-               &expr->body.as_let.bindings,
-               parse_binding(tokens, memory, i));
+        {
+            ExprBinding binding = {};
+            {
+                const Token token = get(tokens, (*i)++);
+                EXIT_IF(token.tag != TOKEN_VAR);
+                binding.name = token.body.as_string;
+            }
+            {
+                const Token token = get(tokens, (*i)++);
+                EXIT_IF(token.tag != TOKEN_ASSIGN);
+            }
+            binding.expr = parse_expr(tokens, memory, i);
+            append(&memory->bindings, &expr->body.as_let.bindings, binding);
+        }
         const Token token = get(tokens, (*i)++);
         if (token.tag == TOKEN_SCOLON) {
             continue;
         }
         if (token.tag == TOKEN_RBRACE) {
-            return expr;
+            break;
         }
     }
+    expr->body.as_let.expr = parse_expr(tokens, memory, i);
+    return expr;
 }
 
 template <usize T, usize S>
@@ -493,49 +477,38 @@ static void parse_args(const Buffer<Token, T>*      tokens,
 }
 
 template <usize T, usize S, usize B, usize U, usize E, usize F>
-static ExprBranch parse_branch(const Buffer<Token, T>*     tokens,
-                               ParseMemory<S, B, U, E, F>* memory,
-                               usize*                      i) {
-    ExprBranch branch;
-    {
-        const Token token = get(tokens, (*i)++);
-        EXIT_IF(token.tag != TOKEN_U32);
-        EXIT_IF(0xFF < token.body.as_u32);
-        branch.tag = static_cast<u8>(token.body.as_u32);
-    }
-    parse_args(tokens, &memory->strings, &branch.args, i);
-    {
-        const Token token = get(tokens, (*i)++);
-        EXIT_IF(token.tag != TOKEN_ASSIGN);
-    }
-    branch.expr = parse_expr(tokens, memory, i);
-    return branch;
-}
-
-template <usize T, usize S, usize B, usize U, usize E, usize F>
 static const Expr* parse_unpack(const Buffer<Token, T>*     tokens,
                                 ParseMemory<S, B, U, E, F>* memory,
                                 usize*                      i) {
     Expr* expr = alloc(&memory->exprs);
     expr->tag = EXPR_UNPACK;
-    {
-        const Token token = get(tokens, (*i)++);
-        EXIT_IF(token.tag != TOKEN_UNPACK);
-    }
     expr->body.as_unpack.expr = parse_expr(tokens, memory, i);
     {
         const Token token = get(tokens, (*i)++);
         EXIT_IF(token.tag != TOKEN_LBRACE);
     }
     for (;;) {
-        append(&memory->branches,
-               &expr->body.as_unpack.branches,
-               parse_branch(tokens, memory, i));
+        {
+            ExprBranch branch = {};
+            {
+                const Token token = get(tokens, (*i)++);
+                EXIT_IF(token.tag != TOKEN_U32);
+                EXIT_IF(0xFF < token.body.as_u32);
+                branch.tag = static_cast<u8>(token.body.as_u32);
+            }
+            parse_args(tokens, &memory->strings, &branch.args, i);
+            {
+                const Token token = get(tokens, (*i)++);
+                EXIT_IF(token.tag != TOKEN_ASSIGN);
+            }
+            branch.expr = parse_expr(tokens, memory, i);
+            append(&memory->branches, &expr->body.as_unpack.branches, branch);
+        }
         const Token token = get(tokens, (*i)++);
         if (token.tag == TOKEN_SCOLON) {
             continue;
         }
-        if (token.tag == TOKEN_LBRACE) {
+        if (token.tag == TOKEN_RBRACE) {
             return expr;
         }
     }
@@ -769,14 +742,10 @@ const Expr* parse_expr(const Buffer<Token, T>*     tokens,
     const Token token = get(tokens, *i);
     if (token.tag == TOKEN_LET) {
         ++(*i);
-        return parse_let<T, S, B, U, E, F, TOKEN_LET, EXPR_LET>(tokens,
-                                                                memory,
-                                                                i);
+        return parse_let<T, S, B, U, E, F, EXPR_LET>(tokens, memory, i);
     } else if (token.tag == TOKEN_LETREC) {
         ++(*i);
-        return parse_let<T, S, B, U, E, F, TOKEN_LETREC, EXPR_LETREC>(tokens,
-                                                                      memory,
-                                                                      i);
+        return parse_let<T, S, B, U, E, F, EXPR_LETREC>(tokens, memory, i);
     } else if (token.tag == TOKEN_UNPACK) {
         ++(*i);
         return parse_unpack(tokens, memory, i);

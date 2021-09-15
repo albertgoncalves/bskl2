@@ -888,6 +888,36 @@ static void test_parse_program(Buffer<Token, T>*           tokens,
         }
         fprintf(stderr, ".");
     }
+    {
+        set_tokens(GET_STRING("f { let { x = 1; y = 2 } x * y }"), tokens);
+        parse_program(tokens, memory);
+        EXIT_IF(memory->funcs.len != 1);
+        {
+            EXIT_IF(memory->funcs.items[0].tag != FUNC_VAR);
+            EXIT_IF(memory->funcs.items[0].name.as_var != GET_STRING("f"));
+        }
+        fprintf(stderr, ".");
+    }
+    {
+        set_tokens(GET_STRING("f { letrec { x = 1; y = x } x * y }"), tokens);
+        parse_program(tokens, memory);
+        EXIT_IF(memory->funcs.len != 1);
+        {
+            EXIT_IF(memory->funcs.items[0].tag != FUNC_VAR);
+            EXIT_IF(memory->funcs.items[0].name.as_var != GET_STRING("f"));
+        }
+        fprintf(stderr, ".");
+    }
+    {
+        set_tokens(GET_STRING("f x { unpack x { 1 = 0; 2 y = y } }"), tokens);
+        parse_program(tokens, memory);
+        EXIT_IF(memory->funcs.len != 1);
+        {
+            EXIT_IF(memory->funcs.items[0].tag != FUNC_VAR);
+            EXIT_IF(memory->funcs.items[0].name.as_var != GET_STRING("f"));
+        }
+        fprintf(stderr, ".");
+    }
     fprintf(stderr, "\n");
 }
 

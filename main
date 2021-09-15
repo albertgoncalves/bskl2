@@ -24,6 +24,8 @@ flags=(
     "-Wno-extra-semi-stmt"
     "-Wno-padded"
     "-Wno-reserved-id-macro"
+    "-Wno-unused-function"
+    "-Wno-unused-template"
 )
 
 now () {

@@ -10,6 +10,7 @@ typedef uint32_t u32;
 typedef size_t   usize;
 
 typedef int32_t i32;
+typedef int64_t i64;
 
 typedef FILE File;
 

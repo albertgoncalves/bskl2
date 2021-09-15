@@ -1,3 +1,4 @@
+#include "inst.hpp"
 #include "parse.hpp"
 
 #define CAP_LIST_STRINGS (1 << 5)
@@ -43,6 +44,11 @@ i32 main() {
            "sizeof(ExprBody)         : %zu\n"
            "sizeof(Expr)             : %zu\n"
            "sizeof(Func)             : %zu\n"
+           "sizeof(InstBody)         : %zu\n"
+           "sizeof(Inst)             : %zu\n"
+           "sizeof(InstFrame)        : %zu\n"
+           "sizeof(NodeBody)         : %zu\n"
+           "sizeof(Node)             : %zu\n"
            "sizeof(Memory)           : %zu\n"
            "\n",
            sizeof(String),
@@ -55,6 +61,11 @@ i32 main() {
            sizeof(ExprBody),
            sizeof(Expr),
            sizeof(Func),
+           sizeof(InstBody),
+           sizeof(Inst),
+           sizeof(InstFrame),
+           sizeof(NodeBody),
+           sizeof(Node),
            sizeof(Memory));
     Memory* memory = reinterpret_cast<Memory*>(calloc(1, sizeof(Memory)));
     test_set_tokens(&memory->tokens);

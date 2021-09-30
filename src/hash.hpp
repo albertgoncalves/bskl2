@@ -61,7 +61,6 @@ static void insert(Table<K, V, N>* table, K key, V value) {
         ++table->len;
     }
     table->items[i] = {key, value, true};
-    return;
 }
 
 template <typename K, typename V, usize N>
